@@ -22,6 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1typed "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
@@ -50,7 +51,7 @@ func (h *podDeletionHandler) Start(ctx context.Context, k8s corev1typed.CoreV1In
 				return
 			case tag := <-h.tagCh:
 				log.Printf("[image_tagged] %q", tag)
-				go h.deletePods(k8s, tag)
+				go h.deletePods(ctx, k8s, tag)
 			}
 		}
 	}()
@@ -58,7 +59,7 @@ func (h *podDeletionHandler) Start(ctx context.Context, k8s corev1typed.CoreV1In
 }
 
 // deletePods deletes pods running the specified tag serially.
-func (h *podDeletionHandler) deletePods(k8s corev1typed.CoreV1Interface, tag string) {
+func (h *podDeletionHandler) deletePods(ctx context.Context, k8s corev1typed.CoreV1Interface, tag string) {
 	pods := h.pods.get(tag)
 	if len(pods) == 0 {
 		log.Printf("[noop] no pods registered with image=%s", tag)
@@ -66,7 +67,7 @@ func (h *podDeletionHandler) deletePods(k8s corev1typed.CoreV1Interface, tag str
 	}
 	for _, p := range pods {
 		log.Printf("[deleting_pod] %s/%s", p.namespace, p.name)
-		if err := k8s.Pods(p.namespace).Delete(p.name, nil); err != nil {
+		if err := k8s.Pods(p.namespace).Delete(ctx, p.name, metav1.DeleteOptions{}); err != nil {
 			log.Println(errors.Wrap(err, "failed to delete pod"))
 		}
 		log.Printf("[deleted_pod] %s/%s", p.namespace, p.name)

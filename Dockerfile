@@ -1,7 +1,7 @@
-FROM golang:1.9-alpine
-COPY . /go/src/github.com/ahmetb/freshpod
-WORKDIR /go/src/github.com/ahmetb/freshpod
-RUN go install .
+FROM golang:1.16-alpine
+COPY . /go/src/github.com/ziadkhouri/freshpod
+WORKDIR /go/src/github.com/ziadkhouri/freshpod
+RUN go install -v .
 
 FROM alpine:3.7
 COPY --from=0 /go/bin/freshpod /freshpod
