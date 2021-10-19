@@ -3,6 +3,6 @@ COPY . /go/src/github.com/ziadkhouri/freshpod
 WORKDIR /go/src/github.com/ziadkhouri/freshpod
 RUN go install -v .
 
-FROM alpine:3.7
+FROM alpine:3.14
 COPY --from=0 /go/bin/freshpod /freshpod
 ENTRYPOINT ["/freshpod"]
